@@ -30,8 +30,8 @@ fig2, ax2 = plt.subplots()
 sns.scatterplot(data=df, x="cost_usd", y="co2_g", hue="model_name", s=100)
 for i in range(df.shape[0]):
     ax2.text(df["cost_usd"][i], df["co2_g"][i], df["model_name"][i])
-st.xlabel("Cost (USD)")
-st.ylabel("CO₂ Emissions (g)")
+ax2.set_xlabel("Cost (USD)")
+ax2.set_ylabel("CO₂ Emissions (g)")
 st.pyplot(fig2)
 
 
