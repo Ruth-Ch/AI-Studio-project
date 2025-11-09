@@ -163,7 +163,7 @@ with tab2:
     st.pyplot(fig4)
 
     st.info(
-        "💡 *Interpretation:* models with higher cost and CO₂ per 1M tokens should be reserved "
+        "*Interpretation:* models with higher cost and CO₂ per 1M tokens should be reserved "
         "for high-complexity tasks, while smaller, cleaner models can handle everyday workloads."
     )
 
