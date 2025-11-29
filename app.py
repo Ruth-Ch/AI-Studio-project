@@ -204,13 +204,15 @@ with tab2:
         )
 
     base_row = df[df["model_name"] == base_model].iloc[0]
-    compare_row = df[df["model_name"] == compare_model].iloc[0]
+compare_row = df[df["model_name"] == compare_model].iloc[0]
 
-    base_cost = base_row["usd_per_million_tokens"] * multiplier
-    compare_cost = compare_row["usd_per_million_tokens"] * multiplier
+base_cost = base_row["usd_per_million_tokens"] * multiplier
+compare_cost = compare_row["usd_per_million_tokens"] * multiplier
 
-    money_saved = base_cost - compare_cost
-    percent_saved = money_saved / base_cost if base_cost > 0 else 0
+money_saved = base_cost - compare_cost
+percent_saved = money_saved / base_cost if base_cost > 0 else 0
 
-    base_co2 = (base_row["co2_g_per_million_tokens"] * multiplier) / 1000.0
-    compare_co2 = (compare_row["co2_g_per_million_tokens"] * mu*
+base_co2 = (base_row["co2_g_per_million_tokens"] * multiplier) / 1000.0
+compare_co2 = (compare_row["co2_g_per_million_tokens"] * multiplier) / 1000.0
+
+co2_saved = base_co2 - compare_co2
