@@ -27,19 +27,14 @@ st.markdown(
             font-family: "Arial", sans-serif;
         }}
 
-        /* Make metric text white */
+        /* Make almost all text white so it is readable */
+        .stApp p, .stApp span, .stApp label, .stApp div {{
+            color: {KPMG_WHITE};
+        }}
+
+        /* Metric cards */
         .stMetric > div {{
-            color: white !important;
-        }}
-
-        /* Make slider labels white */
-        .css-10trblm, .css-1p3jz0k, .stSlider > label, .stSlider label {{
-            color: white !important;
-        }}
-
-        /* Make slider numbers white */
-        .stSlider .css-1cpxqw2, .stSlider .css-1k2i4p1 {{
-            color: white !important;
+            color: {KPMG_WHITE} !important;
         }}
 
         /* Tabs */
@@ -50,7 +45,6 @@ st.markdown(
             border-radius: 6px;
             padding: 8px 20px;
         }}
-
         .stTabs [role="tab"][aria-selected="true"] {{
             background-color: {KPMG_BLUE};
             color: {KPMG_WHITE};
@@ -92,6 +86,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+st.markdown("")  # small spacer
+
 # ---------------------------
 # Tabs
 # ---------------------------
@@ -99,7 +95,7 @@ tab1, tab2, tab3 = st.tabs(
     ["Model Overview", "Cost, CO2 and Savings", "Task based Recommendation"]
 )
 
-# ---------------- TAB 1: Model Overview ----------------
+# =========================== TAB 1 ===========================
 with tab1:
     st.subheader("Model Overview")
 
@@ -114,7 +110,7 @@ with tab1:
         format_func=lambda x: x.replace("_", " ").title(),
     )
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(6, 4))
     sns.barplot(
         data=df.sort_values(metric, ascending=False),
         x=metric,
@@ -123,27 +119,25 @@ with tab1:
         color=KPMG_LIGHT_BLUE,
     )
 
-    ax.set_title(f"{metric.replace('_', ' ').title()} by Model", color=KPMG_WHITE)
-    ax.set_xlabel(metric.replace("_", " ").title())
-    ax.set_ylabel("Model")
+    ax.set_title(f"{metric.replace('_', ' ').title()} by Model", color="white")
+    ax.set_xlabel(metric.replace("_", " ").title(), color="white")
+    ax.set_ylabel("Model", color="white")
 
-    # fix invisible labels
+    # make ticks and borders white so labels show
     ax.tick_params(colors="white")
-    plt.setp(ax.get_yticklabels(), color="white")
-    plt.setp(ax.get_xticklabels(), color="white")
-    ax.xaxis.label.set_color("white")
-    ax.yaxis.label.set_color("white")
-
     for spine in ax.spines.values():
         spine.set_color("white")
 
-    st.pyplot(fig)
+    # center the plot in the page
+    left, center, right = st.columns([1, 3, 1])
+    with center:
+        st.pyplot(fig)
 
     st.caption(
         "Higher bars mean higher cost, higher emissions or higher tokens per dollar."
     )
 
-# ---------------- TAB 2: Cost, CO2 and Savings ----------------
+# =========================== TAB 2 ===========================
 with tab2:
     st.subheader("Cost, CO2 and Savings")
 
@@ -204,15 +198,82 @@ with tab2:
         )
 
     base_row = df[df["model_name"] == base_model].iloc[0]
-compare_row = df[df["model_name"] == compare_model].iloc[0]
+    compare_row = df[df["model_name"] == compare_model].iloc[0]
 
-base_cost = base_row["usd_per_million_tokens"] * multiplier
-compare_cost = compare_row["usd_per_million_tokens"] * multiplier
+    base_cost = base_row["usd_per_million_tokens"] * multiplier
+    compare_cost = compare_row["usd_per_million_tokens"] * multiplier
 
-money_saved = base_cost - compare_cost
-percent_saved = money_saved / base_cost if base_cost > 0 else 0
+    money_saved = base_cost - compare_cost
+    percent_saved = money_saved / base_cost if base_cost > 0 else 0
 
-base_co2 = (base_row["co2_g_per_million_tokens"] * multiplier) / 1000.0
-compare_co2 = (compare_row["co2_g_per_million_tokens"] * multiplier) / 1000.0
+    base_co2 = (base_row["co2_g_per_million_tokens"] * multiplier) / 1000.0
+    compare_co2 = (compare_row["co2_g_per_million_tokens"] * multiplier) / 1000.0
+    co2_saved = base_co2 - compare_co2
 
-co2_saved = base_co2 - compare_co2
+    s1, s2, s3 = st.columns(3)
+    s1.metric("Money saved (USD)", f"{money_saved:,.2f}")
+    s2.metric("Percent saved", f"{percent_saved:.0%}")
+    s3.metric("CO2 saved (kg)", f"{co2_saved:,.2f}")
+
+    st.caption(
+        "Savings are the difference between the two models for the same token estimate and time period."
+    )
+
+# =========================== TAB 3 ===========================
+with tab3:
+    st.subheader("Task based Recommendation")
+
+    st.write(
+        "Pick a task and set how much you care about cost, carbon and model strength. "
+        "The tool suggests a model that fits these choices."
+    )
+
+    task_type = st.selectbox(
+        "Task type",
+        [
+            "Summarization and note taking",
+            "Customer support chat",
+            "Analytical reports and data explanation",
+            "Code generation and complex reasoning",
+        ],
+    )
+
+    st.markdown("**Set priorities** (0 means not important, 1 means very important)")
+
+    colp1, colp2, colp3 = st.columns(3)
+    with colp1:
+        cost_pref = st.slider("Cost", 0.0, 1.0, 0.7)
+    with colp2:
+        carbon_pref = st.slider("Carbon", 0.0, 1.0, 0.7)
+    with colp3:
+        perf_pref = st.slider("Model strength", 0.0, 1.0, 0.5)
+
+    cost_norm = df["usd_per_million_tokens"] / df["usd_per_million_tokens"].max()
+    co2_norm = df["co2_g_per_million_tokens"] / df["co2_g_per_million_tokens"].max()
+    power_norm = df["power_score"] / df["power_score"].max()
+
+    df["composite_score"] = (
+        cost_pref * (1 - cost_norm)
+        + carbon_pref * (1 - co2_norm)
+        + perf_pref * power_norm
+    )
+
+    best_row = df.sort_values("composite_score", ascending=False).iloc[0]
+
+    st.markdown(
+        f"<h3>Suggested model: {best_row['model_name']}</h3>",
+        unsafe_allow_html=True,
+    )
+
+    st.write(
+        f"- Cost: {best_row['usd_per_million_tokens']:.2e} USD per 1M tokens  \n"
+        f"- CO2: {best_row['co2_g_per_million_tokens']:.2e} g per 1M tokens"
+    )
+    st.write(
+        f"- Model strength level: {int(best_row['power_score'])} "
+        f"(higher means a larger and more powerful model)"
+    )
+
+    st.caption(
+        "The suggested model balances cost, carbon and strength based on the sliders above."
+    )
