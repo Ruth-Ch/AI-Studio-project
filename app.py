@@ -27,13 +27,13 @@ st.markdown(
             font-family: "Arial", sans-serif;
         }}
 
-        /* Make almost all text white so it is readable */
-        .stApp p, .stApp span, .stApp label, .stApp div {{
-            color: {KPMG_WHITE};
-        }}
-
         /* Metric cards */
         .stMetric > div {{
+            color: {KPMG_WHITE} !important;
+        }}
+
+        /* Slider labels and numbers */
+        .stSlider label, .stSlider span {{
             color: {KPMG_WHITE} !important;
         }}
 
@@ -78,15 +78,14 @@ df["power_score"] = df["model_name"].map(power_map).fillna(1)
 # Header
 # ---------------------------
 st.markdown(
-    "<h1 style='text-align:center;'>KPMG LLM Decision Support Tool</h1>",
+    "<h1 style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<p style='text-align:center;'>This tool helps compare language models by cost, carbon impact and task fit.</p>",
+    "<p style='text-align:center; color:white;'>This tool helps compare language models by cost, carbon impact and task fit.</p>",
     unsafe_allow_html=True,
 )
-
-st.markdown("")  # small spacer
+st.markdown("")
 
 # ---------------------------
 # Tabs
@@ -110,27 +109,31 @@ with tab1:
         format_func=lambda x: x.replace("_", " ").title(),
     )
 
-    fig, ax = plt.subplots(figsize=(6, 4))
-    sns.barplot(
-        data=df.sort_values(metric, ascending=False),
-        x=metric,
-        y="model_name",
-        ax=ax,
-        color=KPMG_LIGHT_BLUE,
-    )
-
-    ax.set_title(f"{metric.replace('_', ' ').title()} by Model", color="white")
-    ax.set_xlabel(metric.replace("_", " ").title(), color="white")
-    ax.set_ylabel("Model", color="white")
-
-    # make ticks and borders white so labels show
-    ax.tick_params(colors="white")
-    for spine in ax.spines.values():
-        spine.set_color("white")
-
-    # center the plot in the page
+    # chart in the middle, smaller size
     left, center, right = st.columns([1, 3, 1])
     with center:
+        fig, ax = plt.subplots(figsize=(6, 4))
+
+        # white background for chart so we can use black labels
+        fig.patch.set_facecolor("white")
+        ax.set_facecolor("white")
+
+        sns.barplot(
+            data=df.sort_values(metric, ascending=False),
+            x=metric,
+            y="model_name",
+            ax=ax,
+            color=KPMG_LIGHT_BLUE,
+        )
+
+        ax.set_title(f"{metric.replace('_', ' ').title()} by Model", color="black")
+        ax.set_xlabel(metric.replace("_", " ").title(), color="black")
+        ax.set_ylabel("Model", color="black")
+
+        ax.tick_params(colors="black")
+        for spine in ax.spines.values():
+            spine.set_color("black")
+
         st.pyplot(fig)
 
     st.caption(
@@ -261,7 +264,7 @@ with tab3:
     best_row = df.sort_values("composite_score", ascending=False).iloc[0]
 
     st.markdown(
-        f"<h3>Suggested model: {best_row['model_name']}</h3>",
+        f"<h3 style='color:white;'>Suggested model: {best_row['model_name']}</h3>",
         unsafe_allow_html=True,
     )
 
