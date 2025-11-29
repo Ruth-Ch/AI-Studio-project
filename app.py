@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from PIL import Image
 
 sns.set_style("whitegrid")
 
@@ -50,19 +49,16 @@ st.markdown(
 )
 
 # ================================
-# Load data
+# Load data & pre-compute metrics
 # ================================
 df = pd.read_csv("summary_data.csv")
 df["roi_sustainability_score"] = df["roi_tokens_per_dollar"] / df["co2_g"]
 
-# ================================
-# Business impact metrics per model
-# ================================
 TOKENS = 1_000_000
 df["usd_per_million_tokens"] = TOKENS / df["roi_tokens_per_dollar"]
 df["co2_g_per_million_tokens"] = df["co2_g"] / df["roi_tokens_per_dollar"] * TOKENS
 
-# Power mapping (proxy for performance)
+# performance "power" proxy
 power_map = {
     "gemma:2b": 1,
     "gemma:7b": 2,
@@ -73,122 +69,243 @@ power_map = {
 }
 df["power_score"] = df["model_name"].map(power_map).fillna(1)
 
-# ================================
-# Dashboard Tabs
-# ================================
-tab1, tab2, tab3 = st.tabs(["Model Metrics", "Business Impact", "Model Recommendation"])
+# convenience subsets
+small_models = df[df["power_score"] <= 2]
+large_models = df[df["power_score"] == 3]
 
-#  Tab 1
+# choose a default small + large model (you can change these names if needed)
+default_small = "gemma:2b"
+default_large = "codellama:70b"
+
+# ================================
+# Dashboard Tabs (decision focus)
+# ================================
+tab1, tab2, tab3 = st.tabs(
+    ["Tiered Model Routing Planner", "OPEX & CO₂ Forecasting", "Model Selector"]
+)
+
+# -------------- TAB 1 --------------
 with tab1:
-    st.subheader("Per-Model Metrics")
+    st.subheader("Tiered Model Routing Planner")
+
     st.write(
-        "Compare individual models on key metrics such as cost, CO₂ emissions, "
-        "energy use, and ROI (tokens per dollar)."
+        "Use this planner to estimate the impact of **tiered routing**: "
+        "sending most workloads to a small model and reserving large models "
+        "for high-complexity queries. This directly connects to Business "
+        "Insight #1: smaller models can handle ~70–85% of enterprise workloads."
     )
 
-    metric = st.sidebar.selectbox(
-        "Select a metric to visualize",
+    col_a, col_b = st.columns(2)
+
+    with col_a:
+        small_choice = st.selectbox(
+            "Smaller / efficient model (default for everyday tasks)",
+            options=small_models["model_name"].tolist(),
+            index=list(small_models["model_name"]).index(default_small)
+            if default_small in list(small_models["model_name"]) else 0,
+        )
+
+    with col_b:
+        large_choice = st.selectbox(
+            "Large / high-power model (for complex queries)",
+            options=large_models["model_name"].tolist(),
+            index=list(large_models["model_name"]).index(default_large)
+            if default_large in list(large_models["model_name"]) else 0,
+        )
+
+    # % of workloads routed to small model
+    st.markdown("### Workload split")
+    routing_mode = st.radio(
+        "Choose a routing strategy (you can still fine-tune the slider):",
         [
-            "cost_usd",
-            "co2_g",
-            "energy_Wh",
-            "energy_Wh_per_token",
-            "roi_tokens_per_dollar",
-            "roi_sustainability_score",
+            "Conservative: 60% small / 40% large",
+            "Balanced: 75% small / 25% large",
+            "Aggressive: 85% small / 15% large",
+            "Custom split",
         ],
-        index=0,
     )
 
-    # Bar chart
-    fig1, ax1 = plt.subplots(figsize=(8, 5))
-    sns.barplot(
-        data=df.sort_values(metric, ascending=False),
-        x=metric,
-        y="model_name",
-        ax=ax1,
-        color=KPMG_BLUE
+    if routing_mode.startswith("Conservative"):
+        initial_share = 0.60
+    elif routing_mode.startswith("Balanced"):
+        initial_share = 0.75
+    elif routing_mode.startswith("Aggressive"):
+        initial_share = 0.85
+    else:
+        initial_share = 0.75
+
+    small_share = st.slider(
+        "Percentage of workloads handled by the small model",
+        0.0,
+        1.0,
+        initial_share,
+        step=0.05,
+        format="%.0f",
     )
-    ax1.set_xlabel(metric.replace("_", " ").title())
-    ax1.set_ylabel("Model")
-    ax1.set_title(f"{metric.replace('_', ' ').title()} by Model", color=KPMG_NAVY)
-    st.pyplot(fig1)
 
     st.caption(
-        "Use this view to quickly see which models are most expensive, most carbon-intensive, "
-        "or most efficient on a per-token basis."
+        "Example: 0.75 means ~75% of enterprise workloads (summarization, support, "
+        "basic analytics) go to the small model; the remaining 25% use the large model."
     )
 
-    # Scatter (cost vs CO2)
-    fig2, ax2 = plt.subplots(figsize=(8, 5))
-    sns.scatterplot(data=df, x="cost_usd", y="co2_g", hue="model_name", s=100, palette="Blues", ax=ax2)
-    for i in range(df.shape[0]):
-        ax2.text(df["cost_usd"][i], df["co2_g"][i], df["model_name"][i], fontsize=8)
-    ax2.set_xlabel("Cost (USD)")
-    ax2.set_ylabel("CO₂ Emissions (g)")
-    ax2.set_title("Trade-off: Cost vs CO₂ Emissions", color=KPMG_NAVY)
-    st.pyplot(fig2)
+    monthly_tokens = st.number_input(
+        "Estimated monthly token volume",
+        min_value=1_000_000,
+        value=10_000_000,
+        step=1_000_000,
+    )
+
+    # look up model rows
+    small_row = df[df["model_name"] == small_choice].iloc[0]
+    large_row = df[df["model_name"] == large_choice].iloc[0]
+
+    # workload split
+    small_tokens = monthly_tokens * small_share
+    large_tokens = monthly_tokens * (1 - small_share)
+
+    # costs & CO2 for tiered routing
+    small_factor = small_tokens / TOKENS
+    large_factor = large_tokens / TOKENS
+
+    tiered_cost = (
+        small_factor * small_row["usd_per_million_tokens"]
+        + large_factor * large_row["usd_per_million_tokens"]
+    )
+    tiered_co2_g = (
+        small_factor * small_row["co2_g_per_million_tokens"]
+        + large_factor * large_row["co2_g_per_million_tokens"]
+    )
+    tiered_co2_kg = tiered_co2_g / 1000.0
+
+    # baseline: always use large model for 100% workloads
+    baseline_factor = monthly_tokens / TOKENS
+    baseline_cost = baseline_factor * large_row["usd_per_million_tokens"]
+    baseline_co2_g = baseline_factor * large_row["co2_g_per_million_tokens"]
+    baseline_co2_kg = baseline_co2_g / 1000.0
+
+    cost_savings = baseline_cost - tiered_cost
+    co2_savings_kg = baseline_co2_kg - tiered_co2_kg
+
+    st.markdown("### Impact of Tiered Routing (vs. all-large-model baseline)")
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric(
+        "Tiered routing monthly cost (USD)",
+        f"{tiered_cost:,.2f}",
+    )
+    c2.metric(
+        "All-large-model monthly cost (USD)",
+        f"{baseline_cost:,.2f}",
+    )
+    c3.metric(
+        "Monthly cost savings",
+        f"{cost_savings:,.2f}",
+        delta=f"{(cost_savings / baseline_cost):.0%}" if baseline_cost > 0 else None,
+    )
+
+    d1, d2, d3 = st.columns(3)
+    d1.metric(
+        "Tiered routing monthly CO₂ (kg)",
+        f"{tiered_co2_kg:,.1f}",
+    )
+    d2.metric(
+        "All-large-model monthly CO₂ (kg)",
+        f"{baseline_co2_kg:,.1f}",
+    )
+    d3.metric(
+        "Monthly CO₂ savings (kg)",
+        f"{co2_savings_kg:,.1f}",
+    )
 
     st.info(
-        "Models toward the bottom-left are both cheaper and cleaner. "
-        "Larger models tend to move toward the top-right: more powerful, but less efficient."
+        "This directly supports Business Insight #1: by routing ~70–85% of workloads to the "
+        f"{small_choice} model and reserving {large_choice} for complex queries, "
+        "organizations can significantly reduce both OPEX and emissions."
     )
 
-# Tab 2
+# -------------- TAB 2 --------------
 with tab2:
-    st.subheader("Business Impact: Cost & CO₂ per 1M Tokens")
+    st.subheader("OPEX & CO₂ Forecasting")
+
     st.write(
-        "Normalize each model’s **cost** and **CO₂ emissions** to a standard workload of "
-        "1 million tokens. This helps compare models on a like-for-like basis."
+        "This tab links to Business Insight #2. It allows KPMG or a client to forecast "
+        "annual OPEX and emissions based on a chosen model and token volume."
     )
 
-    st.dataframe(
-        df[[
-            "model_name",
-            "roi_tokens_per_dollar",
-            "usd_per_million_tokens",
-            "co2_g_per_million_tokens",
-        ]].sort_values("usd_per_million_tokens"),
-        use_container_width=True,
+    col1, col2 = st.columns(2)
+    with col1:
+        forecast_model = st.selectbox(
+            "Select a single model for this forecast",
+            options=df["model_name"].tolist(),
+        )
+    with col2:
+        horizon = st.selectbox(
+            "Time horizon",
+            options=["Monthly", "Yearly"],
+            index=1,
+        )
+
+    forecast_tokens = st.number_input(
+        f"Estimated {horizon.lower()} token volume",
+        min_value=1_000_000,
+        value=1_000_000_000 if horizon == "Yearly" else 10_000_000,
+        step=1_000_000,
     )
 
-    # Cost bar
-    fig3, ax3 = plt.subplots(figsize=(8, 5))
-    sns.barplot(
-        data=df.sort_values("usd_per_million_tokens", ascending=False),
-        x="usd_per_million_tokens",
-        y="model_name",
-        ax=ax3,
-        color=KPMG_LIGHT_BLUE
-    )
-    ax3.set_xlabel("USD per 1M tokens")
-    ax3.set_title("Cost per 1M Tokens by Model", color=KPMG_NAVY)
-    st.pyplot(fig3)
+    row = df[df["model_name"] == forecast_model].iloc[0]
+    factor = forecast_tokens / TOKENS
 
-    # CO₂ bar
-    fig4, ax4 = plt.subplots(figsize=(8, 5))
-    sns.barplot(
-        data=df.sort_values("co2_g_per_million_tokens", ascending=False),
-        x="co2_g_per_million_tokens",
-        y="model_name",
-        ax=ax4,
-        color=KPMG_BLUE
-    )
-    ax4.set_xlabel("CO₂ (g) per 1M tokens")
-    ax4.set_title("CO₂ per 1M Tokens by Model", color=KPMG_NAVY)
-    st.pyplot(fig4)
+    total_cost = factor * row["usd_per_million_tokens"]
+    total_co2_g = factor * row["co2_g_per_million_tokens"]
+    total_co2_kg = total_co2_g / 1000.0
 
-    st.info(
-        "*Interpretation:* high cost and CO₂ per 1M tokens suggests a model should be reserved "
-        "for high-complexity, high-value tasks. Smaller, cleaner models are better defaults "
-        "for everyday workloads."
+    st.markdown("### Forecast results")
+    f1, f2 = st.columns(2)
+    f1.metric(f"{horizon} cost (USD)", f"{total_cost:,.2f}")
+    f2.metric(f"{horizon} CO₂ (kg)", f"{total_co2_kg:,.1f}")
+
+    # comparison vs a 2B / 70B pair like in your slide
+    st.markdown("---")
+    st.markdown(
+        "#### Example: Comparing a small vs large model (mirrors the 1B tokens example in the slides)"
     )
 
-# Tab 3
+    small_ex = df[df["model_name"] == default_small].iloc[0]
+    large_ex = df[df["model_name"] == default_large].iloc[0]
+
+    example_tokens = 1_000_000_000  # 1B tokens
+    ex_factor = example_tokens / TOKENS
+
+    ex_small_cost = ex_factor * small_ex["usd_per_million_tokens"]
+    ex_large_cost = ex_factor * large_ex["usd_per_million_tokens"]
+    ex_savings = ex_large_cost - ex_small_cost
+    ex_savings_pct = ex_savings / ex_large_cost
+
+    st.write(
+        f"- **1B tokens/year with {default_large} →** "
+        f"${ex_large_cost:,.0f} cost  \n"
+        f"- **Same workload with {default_small} →** "
+        f"${ex_small_cost:,.0f} cost  \n"
+        f"- **Savings:** ~{ex_savings_pct:.0%}"
+    )
+
+    st.caption(
+        "These numbers are calculated directly from the cost-per-million-tokens table, "
+        "just scaled up to the selected volume."
+    )
+
+# -------------- TAB 3 --------------
 with tab3:
-    st.subheader("Model Recommendation")
+    st.subheader("Model Selector")
+
+    st.write(
+        "This tab turns priorities into a recommendation. It supports conversations like: "
+        "*Which model should we standardize on for a given task, given our cost, ESG, and "
+        "performance goals?*"
+    )
 
     task_type = st.selectbox(
-        "Choose a task type",
+        "Task type",
         [
             "Summarization / Note-taking",
             "Customer Support Chat",
@@ -200,23 +317,16 @@ with tab3:
     st.markdown("**Set your priorities** (0 = don’t care, 1 = care a lot)")
     col_p1, col_p2, col_p3 = st.columns(3)
     with col_p1:
-        cost_pref = st.slider("Cost sensitivity", 0.0, 1.0, 0.7)
+        cost_pref = st.slider("Cost", 0.0, 1.0, 0.7)
     with col_p2:
-        carbon_pref = st.slider("Carbon sensitivity", 0.0, 1.0, 0.7)
+        carbon_pref = st.slider("CO₂", 0.0, 1.0, 0.7)
     with col_p3:
-        perf_pref = st.slider("Performance priority", 0.0, 1.0, 0.5)
+        perf_pref = st.slider("Performance", 0.0, 1.0, 0.5)
 
-    st.caption(
-        "Tip: For summarization and note-taking, you can keep performance lower and prioritize cost/CO₂. "
-        "For code generation or complex reasoning, increase performance priority."
-    )
-
-    # Normalize metrics (lower cost/CO₂ is better; higher power is better)
     cost_norm = df["usd_per_million_tokens"] / df["usd_per_million_tokens"].max()
     co2_norm = df["co2_g_per_million_tokens"] / df["co2_g_per_million_tokens"].max()
     power_norm = df["power_score"] / df["power_score"].max()
 
-    # Composite score: higher is better
     df["composite_score"] = (
         cost_pref * (1 - cost_norm)
         + carbon_pref * (1 - co2_norm)
@@ -226,7 +336,7 @@ with tab3:
     best_row = df.sort_values("composite_score", ascending=False).iloc[0]
 
     st.markdown(
-        f"<h3 style='color:{KPMG_BLUE}'>Suggested model: {best_row['model_name']}</h3>",
+        f"<h3 style='color:{KPMG_BLUE}'>Recommended model: {best_row['model_name']}</h3>",
         unsafe_allow_html=True,
     )
 
@@ -235,88 +345,12 @@ with tab3:
         f"- **CO₂ impact:** {best_row['co2_g_per_million_tokens']:.2e} g per 1M tokens"
     )
     st.write(
-        f"- Based on your selected priorities, this leans toward a "
-        f"{'larger / more powerful' if best_row['power_score'] > 1 else 'smaller / more efficient'} model "
-        f"for **{task_type}**."
+        f"- For **{task_type}**, this choice balances your sliders by "
+        f"leaning toward a "
+        f"{'larger / more powerful' if best_row['power_score'] > 1 else 'smaller / more efficient'} model."
     )
 
     st.caption(
-        "The score combines cost, carbon, and performance into a single index to support model selection."
+        "This uses the same underlying metrics as the analysis slides; the only difference is that "
+        "we let the stakeholder choose weights to generate a recommended model."
     )
-
-    # ===== NEW: Scenario calculator – impact at scale =====
-    st.markdown("---")
-    st.subheader("Scenario: Impact at Scale")
-
-    st.write(
-        "Estimate the **monthly cost and CO₂ emissions** of your recommended model, "
-        "and compare it to a baseline strategy that always uses the most powerful model."
-    )
-
-    monthly_tokens = st.number_input(
-        "Estimated monthly token volume",
-        min_value=1_000_000,
-        value=10_000_000,
-        step=1_000_000,
-        help="Rough estimate of how many tokens your organization might generate per month.",
-    )
-
-    volume_factor = monthly_tokens / TOKENS
-
-    # Recommended model totals
-    rec_cost = best_row["usd_per_million_tokens"] * volume_factor
-    rec_co2_g = best_row["co2_g_per_million_tokens"] * volume_factor
-    rec_co2_kg = rec_co2_g / 1000.0
-
-    # Baseline: always use the highest-power model
-    baseline_row = df.loc[df["power_score"].idxmax()]
-    base_cost = baseline_row["usd_per_million_tokens"] * volume_factor
-    base_co2_g = baseline_row["co2_g_per_million_tokens"] * volume_factor
-    base_co2_kg = base_co2_g / 1000.0
-
-    cost_savings = base_cost - rec_cost
-    co2_savings_kg = base_co2_kg - rec_co2_kg
-
-    c1, c2, c3 = st.columns(3)
-    c1.metric(
-        "Recommended model monthly cost (USD)",
-        f"{rec_cost:,.2f}",
-    )
-    c2.metric(
-        "Baseline (max-power) monthly cost (USD)",
-        f"{base_cost:,.2f}",
-    )
-    if cost_savings >= 0:
-        c3.metric(
-            "Monthly cost savings vs baseline",
-            f"{cost_savings:,.2f}",
-            delta=f"{(cost_savings / base_cost):.0%}" if base_cost > 0 else None,
-        )
-    else:
-        c3.metric(
-            "Additional monthly cost vs baseline",
-            f"{-cost_savings:,.2f}",
-            delta=f"{(cost_savings / base_cost):.0%}" if base_cost > 0 else None,
-        )
-
-    d1, d2, d3 = st.columns(3)
-    d1.metric(
-        "Recommended model monthly CO₂ (kg)",
-        f"{rec_co2_kg:,.1f}",
-    )
-    d2.metric(
-        "Baseline (max-power) monthly CO₂ (kg)",
-        f"{base_co2_kg:,.1f}",
-    )
-    d3.metric(
-        "Monthly CO₂ savings vs baseline (kg)",
-        f"{co2_savings_kg:,.1f}",
-    )
-
-    st.info(
-        "Use this scenario view to answer questions like: "
-        "*If we route more everyday tasks to a smaller model and only use large models when necessary, "
-        "how much money and CO₂ could we save each month?*"
-    )
-
-
