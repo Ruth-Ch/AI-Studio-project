@@ -31,11 +31,17 @@ st.markdown(
             color: {KPMG_WHITE};
         }}
 
-        /* Zoomed-in centered content */
+        /* Zoomed OUT: use full width with some padding */
         .block-container {{
-            max-width: 1400px !important;
-            margin: auto !important;
+            max-width: 100% !important;
+            padding-left: 2rem !important;
+            padding-right: 2rem !important;
             padding-top: 2rem !important;
+        }}
+
+        /* Make general text brighter */
+        .block-container p {{
+            color: white !important;
         }}
 
         /* Metric numbers */
@@ -48,7 +54,7 @@ st.markdown(
             color: white !important;
         }}
 
-        /* Selectbox labels */
+        /* Selectbox labels (e.g. "Task type") */
         .stSelectbox label {{
             color: white !important;
         }}
@@ -101,7 +107,6 @@ st.markdown(
     "<p style='text-align:center; color:white;'>This tool helps compare models by cost, carbon impact and task fit.</p>",
     unsafe_allow_html=True,
 )
-
 st.markdown("")
 
 # ---------------------------
@@ -125,29 +130,28 @@ with tab1:
         format_func=lambda x: x.replace("_", " ").title(),
     )
 
-    left, center, right = st.columns([1, 3, 1])
-    with center:
-        fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(6, 4))
 
-        fig.patch.set_facecolor("white")
-        ax.set_facecolor("white")
+    # White chart background so black labels show
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
 
-        sns.barplot(
-            data=df.sort_values(metric, ascending=False),
-            x=metric,
-            y="model_name",
-            ax=ax,
-            color=KPMG_LIGHT_BLUE,
-        )
+    sns.barplot(
+        data=df.sort_values(metric, ascending=False),
+        x=metric,
+        y="model_name",
+        ax=ax,
+        color=KPMG_LIGHT_BLUE,
+    )
 
-        ax.set_title(f"{metric.replace('_',' ').title()} by Model", color="black")
-        ax.set_xlabel(metric.replace("_", " ").title(), color="black")
-        ax.set_ylabel("Model", color="black")
-        ax.tick_params(colors="black")
-        for s in ax.spines.values():
-            s.set_color("black")
+    ax.set_title(f"{metric.replace('_',' ').title()} by Model", color="black")
+    ax.set_xlabel(metric.replace("_", " ").title(), color="black")
+    ax.set_ylabel("Model", color="black")
+    ax.tick_params(colors="black")
+    for s in ax.spines.values():
+        s.set_color("black")
 
-        st.pyplot(fig)
+    st.pyplot(fig)
 
     st.caption("Higher bars mean higher cost, emissions or tokens per dollar.")
 
@@ -155,7 +159,7 @@ with tab1:
 with tab2:
     st.subheader("Cost, CO2 and Savings")
 
-    st.write("Estimate cost and CO2 for one model or compare two to see savings.")
+    st.write("Estimate cost and CO2 for one model and compare two models to see savings.")
 
     colA, colB = st.columns(2)
     with colA:
