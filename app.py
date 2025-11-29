@@ -31,7 +31,7 @@ st.markdown(
             color: {KPMG_WHITE};
         }}
 
-        /* Zoomed OUT: use full width with some padding */
+        /* Zoomed OUT: full width with padding */
         .block-container {{
             max-width: 100% !important;
             padding-left: 2rem !important;
@@ -39,7 +39,7 @@ st.markdown(
             padding-top: 2rem !important;
         }}
 
-        /* Make general text brighter */
+        /* Make general paragraph text bright */
         .block-container p {{
             color: white !important;
         }}
@@ -112,11 +112,9 @@ st.markdown("")
 # ---------------------------
 # Tabs
 # ---------------------------
-tab1, tab2, tab3 = st.tabs([
-    "Model Overview",
-    "Cost, CO2 and Savings",
-    "Task based Recommendation"
-])
+tab1, tab2, tab3 = st.tabs(
+    ["Model Overview", "Cost, CO2 and Savings", "Task based Recommendation"]
+)
 
 # ========================== TAB 1 ==========================
 with tab1:
@@ -130,28 +128,31 @@ with tab1:
         format_func=lambda x: x.replace("_", " ").title(),
     )
 
-    fig, ax = plt.subplots(figsize=(6, 4))
+    # Smaller, centered bar chart
+    left, center, right = st.columns([1, 2, 1])
+    with center:
+        fig, ax = plt.subplots(figsize=(5, 3))  # smaller figure
 
-    # White chart background so black labels show
-    fig.patch.set_facecolor("white")
-    ax.set_facecolor("white")
+        # White chart background so black labels show clearly
+        fig.patch.set_facecolor("white")
+        ax.set_facecolor("white")
 
-    sns.barplot(
-        data=df.sort_values(metric, ascending=False),
-        x=metric,
-        y="model_name",
-        ax=ax,
-        color=KPMG_LIGHT_BLUE,
-    )
+        sns.barplot(
+            data=df.sort_values(metric, ascending=False),
+            x=metric,
+            y="model_name",
+            ax=ax,
+            color=KPMG_LIGHT_BLUE,
+        )
 
-    ax.set_title(f"{metric.replace('_',' ').title()} by Model", color="black")
-    ax.set_xlabel(metric.replace("_", " ").title(), color="black")
-    ax.set_ylabel("Model", color="black")
-    ax.tick_params(colors="black")
-    for s in ax.spines.values():
-        s.set_color("black")
+        ax.set_title(f"{metric.replace('_',' ').title()} by Model", color="black", fontsize=12)
+        ax.set_xlabel(metric.replace("_", " ").title(), color="black", fontsize=10)
+        ax.set_ylabel("Model", color="black", fontsize=10)
+        ax.tick_params(colors="black", labelsize=9)
+        for s in ax.spines.values():
+            s.set_color("black")
 
-    st.pyplot(fig)
+        st.pyplot(fig)
 
     st.caption("Higher bars mean higher cost, emissions or tokens per dollar.")
 
@@ -202,9 +203,13 @@ with tab2:
 
     colX, colY = st.columns(2)
     with colX:
-        base_model = st.selectbox("Current or larger model", df["model_name"].tolist(), key="base")
+        base_model = st.selectbox(
+            "Current or larger model", df["model_name"].tolist(), key="base"
+        )
     with colY:
-        compare_model = st.selectbox("Alternative or smaller model", df["model_name"].tolist(), key="compare")
+        compare_model = st.selectbox(
+            "Alternative or smaller model", df["model_name"].tolist(), key="compare"
+        )
 
     base_row = df[df["model_name"] == base_model].iloc[0]
     comp_row = df[df["model_name"] == compare_model].iloc[0]
