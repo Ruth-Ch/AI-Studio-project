@@ -18,36 +18,52 @@ sns.set_palette([KPMG_BLUE, KPMG_LIGHT_BLUE, KPMG_NAVY])
 
 st.set_page_config(page_title="KPMG LLM Decision Support Tool", layout="wide")
 
+# ---------------------------
+# GLOBAL CSS
+# ---------------------------
 st.markdown(
     f"""
     <style>
+        /* Background */
         .stApp {{
             background: radial-gradient(circle at top left, #0b1b4a, #000000);
-            color: {KPMG_WHITE};
             font-family: "Arial", sans-serif;
+            color: {KPMG_WHITE};
         }}
 
-        /* Metric cards */
+        /* Zoomed-in centered content */
+        .block-container {{
+            max-width: 1400px !important;
+            margin: auto !important;
+            padding-top: 2rem !important;
+        }}
+
+        /* Metric numbers */
         .stMetric > div {{
-            color: {KPMG_WHITE} !important;
+            color: white !important;
         }}
 
-        /* Slider labels and numbers */
+        /* Slider labels + numeric values */
         .stSlider label, .stSlider span {{
-            color: {KPMG_WHITE} !important;
+            color: white !important;
+        }}
+
+        /* Selectbox labels */
+        .stSelectbox label {{
+            color: white !important;
         }}
 
         /* Tabs */
         .stTabs [role="tab"] {{
             background-color: #111827;
-            color: {KPMG_WHITE};
+            color: white;
             font-weight: 600;
             border-radius: 6px;
             padding: 8px 20px;
         }}
         .stTabs [role="tab"][aria-selected="true"] {{
             background-color: {KPMG_BLUE};
-            color: {KPMG_WHITE};
+            color: white;
         }}
     </style>
     """,
@@ -55,7 +71,7 @@ st.markdown(
 )
 
 # ---------------------------
-# Load data and create metrics
+# Load data
 # ---------------------------
 df = pd.read_csv("summary_data.csv")
 
@@ -82,26 +98,26 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<p style='text-align:center; color:white;'>This tool helps compare language models by cost, carbon impact and task fit.</p>",
+    "<p style='text-align:center; color:white;'>This tool helps compare models by cost, carbon impact and task fit.</p>",
     unsafe_allow_html=True,
 )
+
 st.markdown("")
 
 # ---------------------------
 # Tabs
 # ---------------------------
-tab1, tab2, tab3 = st.tabs(
-    ["Model Overview", "Cost, CO2 and Savings", "Task based Recommendation"]
-)
+tab1, tab2, tab3 = st.tabs([
+    "Model Overview",
+    "Cost, CO2 and Savings",
+    "Task based Recommendation"
+])
 
-# =========================== TAB 1 ===========================
+# ========================== TAB 1 ==========================
 with tab1:
     st.subheader("Model Overview")
 
-    st.write(
-        "Use this tab to compare models side by side. "
-        "Pick a metric and the chart shows how each model ranks."
-    )
+    st.write("Use this tab to compare models. Pick a metric and see how they rank.")
 
     metric = st.selectbox(
         "Metric",
@@ -109,12 +125,10 @@ with tab1:
         format_func=lambda x: x.replace("_", " ").title(),
     )
 
-    # chart in the middle, smaller size
     left, center, right = st.columns([1, 3, 1])
     with center:
         fig, ax = plt.subplots(figsize=(6, 4))
 
-        # white background for chart so we can use black labels
         fig.patch.set_facecolor("white")
         ax.set_facecolor("white")
 
@@ -126,35 +140,27 @@ with tab1:
             color=KPMG_LIGHT_BLUE,
         )
 
-        ax.set_title(f"{metric.replace('_', ' ').title()} by Model", color="black")
+        ax.set_title(f"{metric.replace('_',' ').title()} by Model", color="black")
         ax.set_xlabel(metric.replace("_", " ").title(), color="black")
         ax.set_ylabel("Model", color="black")
-
         ax.tick_params(colors="black")
-        for spine in ax.spines.values():
-            spine.set_color("black")
+        for s in ax.spines.values():
+            s.set_color("black")
 
         st.pyplot(fig)
 
-    st.caption(
-        "Higher bars mean higher cost, higher emissions or higher tokens per dollar."
-    )
+    st.caption("Higher bars mean higher cost, emissions or tokens per dollar.")
 
-# =========================== TAB 2 ===========================
+# ========================== TAB 2 ==========================
 with tab2:
     st.subheader("Cost, CO2 and Savings")
 
-    st.write(
-        "This tab lets you estimate cost and carbon impact for a model and see how much you could save by choosing a different one."
-    )
+    st.write("Estimate cost and CO2 for one model or compare two to see savings.")
 
-    col_top1, col_top2 = st.columns(2)
-    with col_top1:
-        period = st.selectbox(
-            "Time period",
-            ["Monthly", "Quarterly", "Yearly"],
-        )
-    with col_top2:
+    colA, colB = st.columns(2)
+    with colA:
+        period = st.selectbox("Time period", ["Monthly", "Quarterly", "Yearly"])
+    with colB:
         monthly_tokens = st.number_input(
             "Estimated monthly tokens",
             min_value=1_000_000,
@@ -170,6 +176,7 @@ with tab2:
         token_factor = 12
 
     total_tokens = monthly_tokens * token_factor
+    multiplier = total_tokens / TOKENS
 
     st.markdown("### Cost and CO2 for one model")
 
@@ -178,7 +185,6 @@ with tab2:
         model_choice = st.selectbox("Model", df["model_name"].tolist())
 
     row = df[df["model_name"] == model_choice].iloc[0]
-    multiplier = total_tokens / TOKENS
 
     est_cost = row["usd_per_million_tokens"] * multiplier
     est_co2_kg = (row["co2_g_per_million_tokens"] * multiplier) / 1000.0
@@ -190,45 +196,35 @@ with tab2:
     st.markdown("---")
     st.markdown("### Compare two models to see savings")
 
-    colx1, colx2 = st.columns(2)
-    with colx1:
-        base_model = st.selectbox(
-            "Current or larger model", df["model_name"].tolist(), key="base_model"
-        )
-    with colx2:
-        compare_model = st.selectbox(
-            "Alternative or smaller model", df["model_name"].tolist(), key="compare_model"
-        )
+    colX, colY = st.columns(2)
+    with colX:
+        base_model = st.selectbox("Current or larger model", df["model_name"].tolist(), key="base")
+    with colY:
+        compare_model = st.selectbox("Alternative or smaller model", df["model_name"].tolist(), key="compare")
 
     base_row = df[df["model_name"] == base_model].iloc[0]
-    compare_row = df[df["model_name"] == compare_model].iloc[0]
+    comp_row = df[df["model_name"] == compare_model].iloc[0]
 
     base_cost = base_row["usd_per_million_tokens"] * multiplier
-    compare_cost = compare_row["usd_per_million_tokens"] * multiplier
-
-    money_saved = base_cost - compare_cost
+    comp_cost = comp_row["usd_per_million_tokens"] * multiplier
+    money_saved = base_cost - comp_cost
     percent_saved = money_saved / base_cost if base_cost > 0 else 0
 
-    base_co2 = (base_row["co2_g_per_million_tokens"] * multiplier) / 1000.0
-    compare_co2 = (compare_row["co2_g_per_million_tokens"] * multiplier) / 1000.0
-    co2_saved = base_co2 - compare_co2
+    base_co2 = (base_row["co2_g_per_million_tokens"] * multiplier) / 1000
+    comp_co2 = (comp_row["co2_g_per_million_tokens"] * multiplier) / 1000
+    co2_saved = base_co2 - comp_co2
 
     s1, s2, s3 = st.columns(3)
     s1.metric("Money saved (USD)", f"{money_saved:,.2f}")
     s2.metric("Percent saved", f"{percent_saved:.0%}")
     s3.metric("CO2 saved (kg)", f"{co2_saved:,.2f}")
 
-    st.caption(
-        "Savings are the difference between the two models for the same token estimate and time period."
-    )
-
-# =========================== TAB 3 ===========================
+# ========================== TAB 3 ==========================
 with tab3:
     st.subheader("Task based Recommendation")
 
     st.write(
-        "Pick a task and set how much you care about cost, carbon and model strength. "
-        "The tool suggests a model that fits these choices."
+        "Pick a task and adjust the sliders for cost, carbon and model strength to get a recommendation."
     )
 
     task_type = st.selectbox(
@@ -243,40 +239,35 @@ with tab3:
 
     st.markdown("**Set priorities** (0 means not important, 1 means very important)")
 
-    colp1, colp2, colp3 = st.columns(3)
-    with colp1:
+    c1, c2, c3 = st.columns(3)
+    with c1:
         cost_pref = st.slider("Cost", 0.0, 1.0, 0.7)
-    with colp2:
+    with c2:
         carbon_pref = st.slider("Carbon", 0.0, 1.0, 0.7)
-    with colp3:
+    with c3:
         perf_pref = st.slider("Model strength", 0.0, 1.0, 0.5)
 
     cost_norm = df["usd_per_million_tokens"] / df["usd_per_million_tokens"].max()
     co2_norm = df["co2_g_per_million_tokens"] / df["co2_g_per_million_tokens"].max()
-    power_norm = df["power_score"] / df["power_score"].max()
+    strength_norm = df["power_score"] / df["power_score"].max()
 
-    df["composite_score"] = (
+    df["score"] = (
         cost_pref * (1 - cost_norm)
         + carbon_pref * (1 - co2_norm)
-        + perf_pref * power_norm
+        + perf_pref * strength_norm
     )
 
-    best_row = df.sort_values("composite_score", ascending=False).iloc[0]
+    best = df.sort_values("score", ascending=False).iloc[0]
 
     st.markdown(
-        f"<h3 style='color:white;'>Suggested model: {best_row['model_name']}</h3>",
+        f"<h3 style='color:white;'>Suggested model: {best['model_name']}</h3>",
         unsafe_allow_html=True,
     )
 
     st.write(
-        f"- Cost: {best_row['usd_per_million_tokens']:.2e} USD per 1M tokens  \n"
-        f"- CO2: {best_row['co2_g_per_million_tokens']:.2e} g per 1M tokens"
-    )
-    st.write(
-        f"- Model strength level: {int(best_row['power_score'])} "
-        f"(higher means a larger and more powerful model)"
+        f"- Cost: {best['usd_per_million_tokens']:.2e} USD per 1M tokens\n"
+        f"- CO2: {best['co2_g_per_million_tokens']:.2e} g per 1M tokens\n"
+        f"- Strength level: {int(best['power_score'])}"
     )
 
-    st.caption(
-        "The suggested model balances cost, carbon and strength based on the sliders above."
-    )
+    st.caption("This model balances your cost, carbon and strength choices.")
