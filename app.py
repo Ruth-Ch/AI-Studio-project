@@ -3,9 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# ---------------------------
+
 # Styling
-# ---------------------------
+
 sns.set_style("whitegrid")
 
 KPMG_BLUE = "#00338D"
@@ -18,9 +18,9 @@ sns.set_palette([KPMG_BLUE, KPMG_LIGHT_BLUE, KPMG_NAVY])
 
 st.set_page_config(page_title="KPMG LLM Decision Support Tool", layout="wide")
 
-# ---------------------------
+
 # GLOBAL CSS
-# ---------------------------
+
 st.markdown(
     f"""
     <style>
@@ -31,12 +31,28 @@ st.markdown(
             color: {KPMG_WHITE};
         }}
 
-        /* Zoomed OUT: full width with padding */
+        /* Tighter layout: less top/bottom padding */
         .block-container {{
             max-width: 100% !important;
-            padding-left: 2rem !important;
-            padding-right: 2rem !important;
-            padding-top: 2rem !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+            padding-top: 0.8rem !important;
+            padding-bottom: 0.8rem !important;
+        }}
+
+        /* Reduce whitespace around titles and subheaders */
+        h1, h2, h3 {{
+            margin-top: 0.3rem;
+            margin-bottom: 0.3rem;
+        }}
+
+        .dashboard-title {{
+            margin-top: 0.2rem;
+            margin-bottom: 0.1rem;
+        }}
+        .dashboard-subtitle {{
+            margin-top: 0rem;
+            margin-bottom: 0.6rem;
         }}
 
         /* Make general paragraph text bright */
@@ -65,7 +81,7 @@ st.markdown(
             color: white;
             font-weight: 600;
             border-radius: 6px;
-            padding: 8px 20px;
+            padding: 6px 16px;
         }}
         .stTabs [role="tab"][aria-selected="true"] {{
             background-color: {KPMG_BLUE};
@@ -76,9 +92,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---------------------------
+
 # Load data
-# ---------------------------
+
 df = pd.read_csv("summary_data.csv")
 
 TOKENS = 1_000_000
@@ -96,18 +112,16 @@ power_map = {
 }
 df["power_score"] = df["model_name"].map(power_map).fillna(1)
 
-# ---------------------------
+
 # Header
-# ---------------------------
 st.markdown(
-    "<h1 style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
+    "<h1 class='dashboard-title' style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<p style='text-align:center; color:white;'>This tool helps compare models by cost, carbon impact and task fit.</p>",
+    "<p class='dashboard-subtitle' style='text-align:center; color:white;'>This tool helps compare models by cost, carbon impact and task fit.</p>",
     unsafe_allow_html=True,
 )
-st.markdown("")
 
 # ---------------------------
 # Tabs
@@ -116,10 +130,9 @@ tab1, tab2, tab3 = st.tabs(
     ["Model Overview", "Cost, CO2 and Savings", "Task based Recommendation"]
 )
 
-# ========================== TAB 1 ==========================
+#TAB 1
 with tab1:
     st.subheader("Model Overview")
-
     st.write("Use this tab to compare models. Pick a metric and see how they rank.")
 
     metric = st.selectbox(
@@ -145,7 +158,11 @@ with tab1:
             color=KPMG_LIGHT_BLUE,
         )
 
-        ax.set_title(f"{metric.replace('_',' ').title()} by Model", color="black", fontsize=12)
+        ax.set_title(
+            f"{metric.replace('_',' ').title()} by Model",
+            color="black",
+            fontsize=12,
+        )
         ax.set_xlabel(metric.replace("_", " ").title(), color="black", fontsize=10)
         ax.set_ylabel("Model", color="black", fontsize=10)
         ax.tick_params(colors="black", labelsize=9)
@@ -156,12 +173,14 @@ with tab1:
 
     st.caption("Higher bars mean higher cost, emissions or tokens per dollar.")
 
-# ========================== TAB 2 ==========================
+# TAB 2 
 with tab2:
     st.subheader("Cost, CO2 and Savings")
+    st.write(
+        "Set a workload, then see cost and CO2 for one model and compare two models to see savings."
+    )
 
-    st.write("Estimate cost and CO2 for one model and compare two models to see savings.")
-
+    # Top controls row (period + tokens)
     colA, colB = st.columns(2)
     with colA:
         period = st.selectbox("Time period", ["Monthly", "Quarterly", "Yearly"])
@@ -183,55 +202,69 @@ with tab2:
     total_tokens = monthly_tokens * token_factor
     multiplier = total_tokens / TOKENS
 
-    st.markdown("### Cost and CO2 for one model")
+    # Two panels side by side to reduce scrolling
+    left_panel, right_panel = st.columns(2)
 
-    col_model, _ = st.columns(2)
-    with col_model:
-        model_choice = st.selectbox("Model", df["model_name"].tolist())
+    # ---- Left: single model cost/CO2 ----
+    with left_panel:
+        st.markdown("#### One model: cost and CO2")
 
-    row = df[df["model_name"] == model_choice].iloc[0]
-
-    est_cost = row["usd_per_million_tokens"] * multiplier
-    est_co2_kg = (row["co2_g_per_million_tokens"] * multiplier) / 1000.0
-
-    c1, c2 = st.columns(2)
-    c1.metric(f"{period} cost (USD)", f"{est_cost:,.2f}")
-    c2.metric(f"{period} CO2 (kg)", f"{est_co2_kg:,.2f}")
-
-    st.markdown("---")
-    st.markdown("### Compare two models to see savings")
-
-    colX, colY = st.columns(2)
-    with colX:
-        base_model = st.selectbox(
-            "Current or larger model", df["model_name"].tolist(), key="base"
+        model_choice = st.selectbox(
+            "Model", df["model_name"].tolist(), key="single_model"
         )
-    with colY:
-        compare_model = st.selectbox(
-            "Alternative or smaller model", df["model_name"].tolist(), key="compare"
+        row = df[df["model_name"] == model_choice].iloc[0]
+
+        est_cost = row["usd_per_million_tokens"] * multiplier
+        est_co2_kg = (row["co2_g_per_million_tokens"] * multiplier) / 1000.0
+
+        c1, c2 = st.columns(2)
+        c1.metric(f"{period} cost (USD)", f"{est_cost:,.2f}")
+        c2.metric(f"{period} CO2 (kg)", f"{est_co2_kg:,.2f}")
+
+        st.caption(
+            "Values are based on cost and CO2 per 1M tokens from the analysis, scaled to the selected time period and token estimate."
         )
 
-    base_row = df[df["model_name"] == base_model].iloc[0]
-    comp_row = df[df["model_name"] == compare_model].iloc[0]
+    # ---- Right: compare two models ----
+    with right_panel:
+        st.markdown("#### Compare two models")
 
-    base_cost = base_row["usd_per_million_tokens"] * multiplier
-    comp_cost = comp_row["usd_per_million_tokens"] * multiplier
-    money_saved = base_cost - comp_cost
-    percent_saved = money_saved / base_cost if base_cost > 0 else 0
+        colX, colY = st.columns(2)
+        with colX:
+            base_model = st.selectbox(
+                "Current or larger model", df["model_name"].tolist(), key="base"
+            )
+        with colY:
+            compare_model = st.selectbox(
+                "Alternative or smaller model",
+                df["model_name"].tolist(),
+                key="compare",
+            )
 
-    base_co2 = (base_row["co2_g_per_million_tokens"] * multiplier) / 1000
-    comp_co2 = (comp_row["co2_g_per_million_tokens"] * multiplier) / 1000
-    co2_saved = base_co2 - comp_co2
+        base_row = df[df["model_name"] == base_model].iloc[0]
+        comp_row = df[df["model_name"] == compare_model].iloc[0]
 
-    s1, s2, s3 = st.columns(3)
-    s1.metric("Money saved (USD)", f"{money_saved:,.2f}")
-    s2.metric("Percent saved", f"{percent_saved:.0%}")
-    s3.metric("CO2 saved (kg)", f"{co2_saved:,.2f}")
+        base_cost = base_row["usd_per_million_tokens"] * multiplier
+        comp_cost = comp_row["usd_per_million_tokens"] * multiplier
+        money_saved = base_cost - comp_cost
+        percent_saved = money_saved / base_cost if base_cost > 0 else 0
 
-# ========================== TAB 3 ==========================
+        base_co2 = (base_row["co2_g_per_million_tokens"] * multiplier) / 1000
+        comp_co2 = (comp_row["co2_g_per_million_tokens"] * multiplier) / 1000
+        co2_saved = base_co2 - comp_co2
+
+        s1, s2, s3 = st.columns(3)
+        s1.metric("Money saved (USD)", f"{money_saved:,.2f}")
+        s2.metric("Percent saved", f"{percent_saved:.0%}")
+        s3.metric("CO2 saved (kg)", f"{co2_saved:,.2f}")
+
+        st.caption(
+            "Use this to test routing more traffic from a larger model to a smaller one and quantify savings."
+        )
+
+#TAB 3
 with tab3:
     st.subheader("Task based Recommendation")
-
     st.write(
         "Pick a task and adjust the sliders for cost, carbon and model strength to get a recommendation."
     )
@@ -280,3 +313,5 @@ with tab3:
     )
 
     st.caption("This model balances your cost, carbon and strength choices.")
+
+
