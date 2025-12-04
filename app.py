@@ -3,8 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Styling
-
+# ---------- Styling setup ----------
 sns.set_style("whitegrid")
 
 KPMG_BLUE = "#00338D"
@@ -17,100 +16,95 @@ sns.set_palette([KPMG_BLUE, KPMG_LIGHT_BLUE, KPMG_NAVY])
 
 st.set_page_config(page_title="KPMG LLM Decision Support Tool", layout="wide")
 
-# GLOBAL CSS
-
+# ---------- Global CSS ----------
 st.markdown(
     f"""
     <style>
-        /* Hide Streamlit's default header / menu / footer */
+        /* Hide Streamlit default chrome (top white bar, menu, footer) */
         #MainMenu {{visibility: hidden;}}
         header {{visibility: hidden; height: 0px;}}
         footer {{visibility: hidden;}}
 
-        /* Kill extra padding Streamlit puts above the app body */
-        .main > div {{
-            padding-top: 0rem !important;
-        }}
-
-        /* Page background */
         html, body {{
             margin: 0;
             padding: 0;
             background: radial-gradient(circle at top left, #0b1b4a, #000000);
         }}
 
-        /* App background and base font */
         .stApp {{
             background: radial-gradient(circle at top left, #0b1b4a, #000000);
             font-family: "Arial", sans-serif;
             color: {KPMG_WHITE};
         }}
 
-        /* Layout padding (small so more fits on screen) */
+        /* Main layout container – tight padding so more fits vertically */
         .block-container {{
             max-width: 100% !important;
-            padding-left: 1.5rem !important;
-            padding-right: 1.5rem !important;
-            padding-top: 0.4rem !important;
-            padding-bottom: 0.4rem !important;
+            padding-left: 1.2rem !important;
+            padding-right: 1.2rem !important;
+            padding-top: 0.2rem !important;
+            padding-bottom: 0.2rem !important;
         }}
 
-        /* Reduce whitespace around titles and subheaders */
+        /* Compact headings */
         h1, h2, h3 {{
-            margin-top: 0.25rem;
-            margin-bottom: 0.25rem;
+            margin-top: 0.15rem !important;
+            margin-bottom: 0.15rem !important;
         }}
 
-        .dashboard-title {{
-            margin-top: 0.1rem;
-            margin-bottom: 0.05rem;
-            font-size: 2.2rem;  /* slightly smaller title so it takes less vertical space */
-        }}
-        .dashboard-subtitle {{
-            margin-top: 0rem;
-            margin-bottom: 0.45rem;
-            font-size: 0.95rem;
+        /* Remove extra padding above/below tab content */
+        .stTabs [role="tabpanel"] {{
+            padding-top: 0.1rem !important;
+            padding-bottom: 0.1rem !important;
         }}
 
-        /* Make general paragraph text bright */
+        /* Make body text bright */
         .block-container p {{
             color: white !important;
+            margin-top: 0.1rem;
+            margin-bottom: 0.1rem;
         }}
 
-        /* Metric numbers */
+        /* Metrics text */
         .stMetric > div {{
             color: white !important;
         }}
 
-        /* Slider labels + numeric values */
+        /* Slider labels and values */
         .stSlider label, .stSlider span {{
             color: white !important;
         }}
 
-        /* Selectbox labels (e.g. "Task type") */
+        /* Selectbox labels */
         .stSelectbox label {{
             color: white !important;
+            margin-bottom: 0.1rem;
         }}
 
-        /* Tabs */
+        /* Tabs look */
         .stTabs [role="tab"] {{
             background-color: #111827;
             color: white;
             font-weight: 600;
             border-radius: 6px;
-            padding: 6px 16px;
+            padding: 4px 14px;
         }}
         .stTabs [role="tab"][aria-selected="true"] {{
             background-color: {KPMG_BLUE};
             color: white;
+        }}
+
+        /* Compress vertical space around form widgets */
+        .stSelectbox, .stSlider, .stNumberInput {{
+            margin-top: 0rem !important;
+            margin-bottom: 0.1rem !important;
         }}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# Load data
-
+# ---------- Load data ----------
 df = pd.read_csv("summary_data.csv")
 
 TOKENS = 1_000_000
@@ -128,25 +122,22 @@ power_map = {
 }
 df["power_score"] = df["model_name"].map(power_map).fillna(1)
 
-# Header
-
-st.markdown(
-    "<h1 class='dashboard-title' style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
-    unsafe_allow_html=True,
-)
-st.markdown(
-    "<p class='dashboard-subtitle' style='text-align:center; color:white;'>This tool helps compare models by cost, carbon impact and task fit.</p>",
-    unsafe_allow_html=True,
-)
-
-# Tabs
-
+# ---------- Tabs ----------
 tab1, tab2, tab3 = st.tabs(
     ["Model Overview", "Cost, CO2 and Savings", "Task based Recommendation"]
 )
 
-# TAB 1
+# ================================= TAB 1 =================================
 with tab1:
+    st.markdown(
+        "<h1 style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p style='text-align:center; color:white;'>Compare models by cost, carbon impact and value.</p>",
+        unsafe_allow_html=True,
+    )
+
     st.subheader("Model Overview")
     st.write("Use this tab to compare models. Pick a metric and see how they rank.")
 
@@ -156,10 +147,10 @@ with tab1:
         format_func=lambda x: x.replace("_", " ").title(),
     )
 
-    # Much smaller chart + minimal padding
+    # Small centered chart
     left, center, right = st.columns([1, 2, 1])
     with center:
-        fig, ax = plt.subplots(figsize=(4, 1.5))   # slightly shorter
+        fig, ax = plt.subplots(figsize=(4, 1.7))  # compact chart
 
         fig.patch.set_facecolor("white")
         ax.set_facecolor("white")
@@ -176,15 +167,12 @@ with tab1:
             f"{metric.replace('_',' ').title()} by Model",
             color="black",
             fontsize=10,
-            pad=3
+            pad=3,
         )
         ax.set_xlabel(
-            metric.replace("_", " ").title(),
-            color="black",
-            fontsize=8,
-            labelpad=1
+            metric.replace("_", " ").title(), color="black", fontsize=8, labelpad=2
         )
-        ax.set_ylabel("Model", color="black", fontsize=8, labelpad=1)
+        ax.set_ylabel("Model", color="black", fontsize=8, labelpad=2)
         ax.tick_params(colors="black", labelsize=7, pad=1)
 
         for s in ax.spines.values():
@@ -196,9 +184,17 @@ with tab1:
 
     st.caption("Higher bars mean higher cost, emissions or tokens per dollar.")
 
-# TAB 2 
-
+# ================================= TAB 2 =================================
 with tab2:
+    st.markdown(
+        "<h1 style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p style='text-align:center; color:white;'>Estimate cost and CO2 and compare route-to-model options.</p>",
+        unsafe_allow_html=True,
+    )
+
     st.subheader("Cost, CO2 and Savings")
     st.write(
         "Set a workload, then see cost and CO2 for one model and compare two models to see savings."
@@ -227,8 +223,7 @@ with tab2:
 
     left_panel, right_panel = st.columns(2)
 
-    # left panel: one model
-
+    # left: one model
     with left_panel:
         st.markdown("#### One model: cost and CO2")
 
@@ -245,11 +240,10 @@ with tab2:
         c2.metric(f"{period} CO2 (kg)", f"{est_co2_kg:,.2f}")
 
         st.caption(
-            "Values are based on cost and CO2 per 1M tokens from the analysis, scaled to the selected time period and token estimate."
+            "Values use cost and CO2 per 1M tokens from the analysis, scaled to the selected time period and volume."
         )
 
-    # right panel: compare
-
+    # right: compare
     with right_panel:
         st.markdown("#### Compare two models")
 
@@ -286,9 +280,17 @@ with tab2:
             "Use this to test routing more traffic from a larger model to a smaller one and quantify savings."
         )
 
-# TAB 3
-
+# ================================= TAB 3 =================================
 with tab3:
+    st.markdown(
+        "<h1 style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p style='text-align:center; color:white;'>Get a model suggestion based on task type and your priorities.</p>",
+        unsafe_allow_html=True,
+    )
+
     st.subheader("Task based Recommendation")
     st.write(
         "Pick a task and adjust the sliders for cost, carbon and model strength to get a recommendation."
