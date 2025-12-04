@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
 # Styling
 
 sns.set_style("whitegrid")
@@ -18,41 +17,47 @@ sns.set_palette([KPMG_BLUE, KPMG_LIGHT_BLUE, KPMG_NAVY])
 
 st.set_page_config(page_title="KPMG LLM Decision Support Tool", layout="wide")
 
-
 # GLOBAL CSS
 
 st.markdown(
     f"""
     <style>
-        /* Background */
+        /* Page background (fix white band at the very top) */
+        html, body {{
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at top left, #0b1b4a, #000000);
+        }}
+
+        /* App background and base font */
         .stApp {{
             background: radial-gradient(circle at top left, #0b1b4a, #000000);
             font-family: "Arial", sans-serif;
             color: {KPMG_WHITE};
         }}
 
-        /* Tighter layout: less top/bottom padding */
+        /* Layout padding */
         .block-container {{
             max-width: 100% !important;
             padding-left: 1.5rem !important;
             padding-right: 1.5rem !important;
-            padding-top: 0.8rem !important;
-            padding-bottom: 0.8rem !important;
+            padding-top: 0.6rem !important;
+            padding-bottom: 0.6rem !important;
         }}
 
         /* Reduce whitespace around titles and subheaders */
         h1, h2, h3 {{
-            margin-top: 0.3rem;
-            margin-bottom: 0.3rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.25rem;
         }}
 
         .dashboard-title {{
-            margin-top: 0.2rem;
+            margin-top: 0.1rem;
             margin-bottom: 0.1rem;
         }}
         .dashboard-subtitle {{
             margin-top: 0rem;
-            margin-bottom: 0.6rem;
+            margin-bottom: 0.5rem;
         }}
 
         /* Make general paragraph text bright */
@@ -92,7 +97,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 # Load data
 
 df = pd.read_csv("summary_data.csv")
@@ -112,8 +116,8 @@ power_map = {
 }
 df["power_score"] = df["model_name"].map(power_map).fillna(1)
 
-
 # Header
+
 st.markdown(
     "<h1 class='dashboard-title' style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
     unsafe_allow_html=True,
@@ -123,14 +127,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---------------------------
 # Tabs
-# ---------------------------
+
 tab1, tab2, tab3 = st.tabs(
     ["Model Overview", "Cost, CO2 and Savings", "Task based Recommendation"]
 )
 
-#TAB 1
+# TAB 1
+
 with tab1:
     st.subheader("Model Overview")
     st.write("Use this tab to compare models. Pick a metric and see how they rank.")
@@ -141,12 +145,11 @@ with tab1:
         format_func=lambda x: x.replace("_", " ").title(),
     )
 
-    # Smaller, centered bar chart
     left, center, right = st.columns([1, 2, 1])
     with center:
-        fig, ax = plt.subplots(figsize=(5, 3))  # smaller figure
+        # slightly smaller chart so more fits on screen
+        fig, ax = plt.subplots(figsize=(4.5, 2.5))
 
-        # White chart background so black labels show clearly
         fig.patch.set_facecolor("white")
         ax.set_facecolor("white")
 
@@ -174,13 +177,13 @@ with tab1:
     st.caption("Higher bars mean higher cost, emissions or tokens per dollar.")
 
 # TAB 2 
+
 with tab2:
     st.subheader("Cost, CO2 and Savings")
     st.write(
         "Set a workload, then see cost and CO2 for one model and compare two models to see savings."
     )
 
-    # Top controls row (period + tokens)
     colA, colB = st.columns(2)
     with colA:
         period = st.selectbox("Time period", ["Monthly", "Quarterly", "Yearly"])
@@ -202,10 +205,10 @@ with tab2:
     total_tokens = monthly_tokens * token_factor
     multiplier = total_tokens / TOKENS
 
-    # Two panels side by side to reduce scrolling
     left_panel, right_panel = st.columns(2)
 
-    # ---- Left: single model cost/CO2 ----
+    # left panel: one model
+
     with left_panel:
         st.markdown("#### One model: cost and CO2")
 
@@ -225,7 +228,8 @@ with tab2:
             "Values are based on cost and CO2 per 1M tokens from the analysis, scaled to the selected time period and token estimate."
         )
 
-    # ---- Right: compare two models ----
+    # right panel: compare
+
     with right_panel:
         st.markdown("#### Compare two models")
 
@@ -262,7 +266,8 @@ with tab2:
             "Use this to test routing more traffic from a larger model to a smaller one and quantify savings."
         )
 
-#TAB 3
+# TAB 3
+
 with tab3:
     st.subheader("Task based Recommendation")
     st.write(
@@ -313,5 +318,3 @@ with tab3:
     )
 
     st.caption("This model balances your cost, carbon and strength choices.")
-
-
