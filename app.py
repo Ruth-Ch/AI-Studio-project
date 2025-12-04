@@ -22,11 +22,15 @@ st.set_page_config(page_title="KPMG LLM Decision Support Tool", layout="wide")
 st.markdown(
     f"""
     <style>
-        /* Hide Streamlit's default header / menu / footer
-           This removes the white bar at the very top */
+        /* Hide Streamlit's default header / menu / footer */
         #MainMenu {{visibility: hidden;}}
         header {{visibility: hidden; height: 0px;}}
         footer {{visibility: hidden;}}
+
+        /* Kill extra padding Streamlit puts above the app body */
+        .main > div {{
+            padding-top: 0rem !important;
+        }}
 
         /* Page background */
         html, body {{
@@ -42,13 +46,13 @@ st.markdown(
             color: {KPMG_WHITE};
         }}
 
-        /* Layout padding (kept small so more fits on screen) */
+        /* Layout padding (small so more fits on screen) */
         .block-container {{
             max-width: 100% !important;
             padding-left: 1.5rem !important;
             padding-right: 1.5rem !important;
-            padding-top: 0.6rem !important;
-            padding-bottom: 0.6rem !important;
+            padding-top: 0.4rem !important;
+            padding-bottom: 0.4rem !important;
         }}
 
         /* Reduce whitespace around titles and subheaders */
@@ -59,11 +63,13 @@ st.markdown(
 
         .dashboard-title {{
             margin-top: 0.1rem;
-            margin-bottom: 0.1rem;
+            margin-bottom: 0.05rem;
+            font-size: 2.2rem;  /* slightly smaller title so it takes less vertical space */
         }}
         .dashboard-subtitle {{
             margin-top: 0rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.45rem;
+            font-size: 0.95rem;
         }}
 
         /* Make general paragraph text bright */
@@ -139,8 +145,6 @@ tab1, tab2, tab3 = st.tabs(
     ["Model Overview", "Cost, CO2 and Savings", "Task based Recommendation"]
 )
 
-
-
 # TAB 1
 with tab1:
     st.subheader("Model Overview")
@@ -155,7 +159,7 @@ with tab1:
     # Much smaller chart + minimal padding
     left, center, right = st.columns([1, 2, 1])
     with center:
-        fig, ax = plt.subplots(figsize=(4, 1.8))   # ↓ SMALLER HEIGHT
+        fig, ax = plt.subplots(figsize=(4, 1.5))   # slightly shorter
 
         fig.patch.set_facecolor("white")
         ax.set_facecolor("white")
@@ -168,21 +172,25 @@ with tab1:
             color=KPMG_LIGHT_BLUE,
         )
 
-        # Smaller font sizes so everything fits compactly
         ax.set_title(
             f"{metric.replace('_',' ').title()} by Model",
             color="black",
             fontsize=10,
-            pad=4
+            pad=3
         )
-        ax.set_xlabel(metric.replace("_", " ").title(), color="black", fontsize=8, labelpad=2)
-        ax.set_ylabel("Model", color="black", fontsize=8, labelpad=2)
+        ax.set_xlabel(
+            metric.replace("_", " ").title(),
+            color="black",
+            fontsize=8,
+            labelpad=1
+        )
+        ax.set_ylabel("Model", color="black", fontsize=8, labelpad=1)
         ax.tick_params(colors="black", labelsize=7, pad=1)
 
         for s in ax.spines.values():
             s.set_color("black")
 
-        plt.tight_layout(pad=0.5)   # ↓ MINIMIZE EMPTY SPACE AROUND CHART
+        plt.tight_layout(pad=0.3)
 
         st.pyplot(fig)
 
