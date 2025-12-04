@@ -22,7 +22,13 @@ st.set_page_config(page_title="KPMG LLM Decision Support Tool", layout="wide")
 st.markdown(
     f"""
     <style>
-        /* Page background (fix white band at the very top) */
+        /* Hide Streamlit's default header / menu / footer
+           This removes the white bar at the very top */
+        #MainMenu {{visibility: hidden;}}
+        header {{visibility: hidden; height: 0px;}}
+        footer {{visibility: hidden;}}
+
+        /* Page background */
         html, body {{
             margin: 0;
             padding: 0;
@@ -36,7 +42,7 @@ st.markdown(
             color: {KPMG_WHITE};
         }}
 
-        /* Layout padding */
+        /* Layout padding (kept small so more fits on screen) */
         .block-container {{
             max-width: 100% !important;
             padding-left: 1.5rem !important;
@@ -147,7 +153,7 @@ with tab1:
 
     left, center, right = st.columns([1, 2, 1])
     with center:
-        # slightly smaller chart so more fits on screen
+        # small-ish chart so more fits on screen
         fig, ax = plt.subplots(figsize=(4.5, 2.5))
 
         fig.patch.set_facecolor("white")
