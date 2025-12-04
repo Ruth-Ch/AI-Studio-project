@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# ---------- Styling setup ----------
+#Styling setup
 sns.set_style("whitegrid")
 
 KPMG_BLUE = "#00338D"
@@ -16,7 +16,7 @@ sns.set_palette([KPMG_BLUE, KPMG_LIGHT_BLUE, KPMG_NAVY])
 
 st.set_page_config(page_title="KPMG LLM Decision Support Tool", layout="wide")
 
-# ---------- Global CSS ----------
+# Global CSS
 st.markdown(
     f"""
     <style>
@@ -104,7 +104,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---------- Load data ----------
+# Load data
 df = pd.read_csv("summary_data.csv")
 
 TOKENS = 1_000_000
@@ -127,7 +127,7 @@ tab1, tab2, tab3 = st.tabs(
     ["Model Overview", "Cost, CO2 and Savings", "Task based Recommendation"]
 )
 
-# ================================= TAB 1 =================================
+# TAB 1
 with tab1:
     st.markdown(
         "<h1 style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
@@ -184,7 +184,7 @@ with tab1:
 
     st.caption("Higher bars mean higher cost, emissions or tokens per dollar.")
 
-# ================================= TAB 2 =================================
+# TAB 2
 with tab2:
     st.markdown(
         "<h1 style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
@@ -280,7 +280,7 @@ with tab2:
             "Use this to test routing more traffic from a larger model to a smaller one and quantify savings."
         )
 
-# ================================= TAB 3 =================================
+# TAB 3 
 with tab3:
     st.markdown(
         "<h1 style='text-align:center; color:white;'>KPMG LLM Decision Support Tool</h1>",
@@ -340,3 +340,6 @@ with tab3:
     )
 
     st.caption("This model balances your cost, carbon and strength choices.")
+
+
+
