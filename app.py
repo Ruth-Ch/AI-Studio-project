@@ -139,8 +139,9 @@ tab1, tab2, tab3 = st.tabs(
     ["Model Overview", "Cost, CO2 and Savings", "Task based Recommendation"]
 )
 
-# TAB 1
 
+
+# TAB 1
 with tab1:
     st.subheader("Model Overview")
     st.write("Use this tab to compare models. Pick a metric and see how they rank.")
@@ -151,10 +152,10 @@ with tab1:
         format_func=lambda x: x.replace("_", " ").title(),
     )
 
+    # Much smaller chart + minimal padding
     left, center, right = st.columns([1, 2, 1])
     with center:
-        # small-ish chart so more fits on screen
-        fig, ax = plt.subplots(figsize=(4.5, 2.5))
+        fig, ax = plt.subplots(figsize=(4, 1.8))   # ↓ SMALLER HEIGHT
 
         fig.patch.set_facecolor("white")
         ax.set_facecolor("white")
@@ -167,16 +168,21 @@ with tab1:
             color=KPMG_LIGHT_BLUE,
         )
 
+        # Smaller font sizes so everything fits compactly
         ax.set_title(
             f"{metric.replace('_',' ').title()} by Model",
             color="black",
-            fontsize=12,
+            fontsize=10,
+            pad=4
         )
-        ax.set_xlabel(metric.replace("_", " ").title(), color="black", fontsize=10)
-        ax.set_ylabel("Model", color="black", fontsize=10)
-        ax.tick_params(colors="black", labelsize=9)
+        ax.set_xlabel(metric.replace("_", " ").title(), color="black", fontsize=8, labelpad=2)
+        ax.set_ylabel("Model", color="black", fontsize=8, labelpad=2)
+        ax.tick_params(colors="black", labelsize=7, pad=1)
+
         for s in ax.spines.values():
             s.set_color("black")
+
+        plt.tight_layout(pad=0.5)   # ↓ MINIMIZE EMPTY SPACE AROUND CHART
 
         st.pyplot(fig)
 
