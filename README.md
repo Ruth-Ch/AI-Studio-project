@@ -1,70 +1,144 @@
-# AI-Studio-project
 # 🧠 LLM ROI & Sustainability Dashboard  
-###  
+### 🔹 Optimizing AI Model Selection: Cost & Environmental Impact Analysis  
+
+---
 
 ## 📋 Overview  
-This project is part of the **Break Through Tech AI x KPMG Trusted AI Fellowship**.  
-The dashboard helps users **compare Large Language Models (LLMs)** based on cost, energy use, carbon emissions, and estimated ROI metrics to explore trade-offs between **performance, sustainability, and cost efficiency**.  
+This project was developed as part of the **Break Through Tech AI x KPMG Trusted AI Fellowship**.  
+Our goal was to build a **data-driven decision-support dashboard** that helps users compare **Large Language Models (LLMs)** on both **financial and environmental impact**.  
 
-Built in **Streamlit**, this tool provides a visual and interactive way to evaluate AI models’ sustainability and ROI profiles.  
+The dashboard allows organizations to explore trade-offs between **cost, CO₂ emissions, and energy efficiency** — helping them make smarter, more sustainable choices when deploying AI.  
+
+Built with **Streamlit**, the tool turns complex datasets into interactive visual insights that show where AI is worth the investment — and where it’s not.  
 
 ---
 
 ## 🎯 Objective  
-To create a transparent, data-driven dashboard that allows users to:  
-- Evaluate how different LLMs perform on financial and environmental metrics  
-- Understand cost-to-efficiency and cost-to-emission trade-offs  
-- Estimate ROI and sustainability performance through visual comparisons  
+To design a transparent, user-friendly dashboard that enables users to:  
+
+- ⚙️ **Compare LLMs** on key business metrics — cost, energy, and emissions.  
+- 🌍 **Quantify sustainability impact** through carbon and energy analysis.  
+- 💰 **Estimate ROI** by balancing financial performance and sustainability.  
+- 🧾 **Support AI governance and ESG reporting** with measurable data.  
 
 ---
 
 ## 🧩 Key Features  
+
 ### 🎛️ Interactive Metric Selector  
-Users can choose which metric to visualize from a dropdown menu.  
+Choose what metric you want to analyze — from cost to carbon footprint.  
 
 **Available metrics:**  
-- `cost_usd` — Total cost of running the model  
-- `co2_g` — CO₂ emissions (in grams)  
-- `energy_Wh` — Energy consumed in watt-hours  
-- `energy_Wh_per_token` — Energy usage per generated token  
-- `roi_tokens_per_dollar` — ROI measured as tokens per dollar spent  
-- `roi_sustainability_score` — Combined metric estimating overall sustainability and ROI performance  
+- `cost_usd` → Total operational cost  
+- `co2_g` → CO₂ emissions in grams  
+- `energy_Wh` → Total energy consumed  
+- `energy_Wh_per_token` → Energy used per generated token  
+- `roi_tokens_per_dollar` → Efficiency (tokens per dollar spent)  
+- `roi_sustainability_score` → Combined sustainability + ROI index  
 
 ---
 
-## 📊 Visualizations  
-- **Bar Chart:** Compares selected metrics (like cost or ROI) across LLM models  
-- **Scatter Plot:** Displays trade-offs between **cost** and **CO₂ emissions** for visual insight into sustainability vs. expense  
+### 📊 Visual Insights  
+
+- **Bar Chart** → Compare cost, energy, or ROI across different models.  
+- **Scatter Plot** → Visualize trade-offs between CO₂ emissions and cost.  
+- **Dashboard Filters** → Adjust for workload size, token count, or model type.  
+
+These visuals make it easy to see which models are efficient, affordable, and environmentally responsible.  
+
+---
+
+## 💡 Business Insights from the Analysis  
+
+### **1️⃣ Tiered Model Routing**  
+Smaller models (2B–7B) can handle 70–85% of enterprise workloads.  
+Routing simple tasks to smaller models can reduce **costs by up to 90%** and **CO₂ emissions by over 90%**.  
+➡️ Integrated into the dashboard as part of the model recommendation logic.  
+
+---
+
+### **2️⃣ AI Financial Forecasting**  
+Model selection directly impacts yearly operating expenses (OPEX).  
+For example, 1B tokens/year with a 70B model costs ~$1,600, while a 2B model costs just ~$29 — a **98% cost saving**.  
+➡️ The dashboard estimates financial trade-offs instantly.  
+
+---
+
+### **3️⃣ Responsible AI & Sustainability**  
+AI emissions are now part of emerging **regulatory frameworks (ESG/CSRD)**.  
+Our tool visualizes **CO₂ impact per model**, allowing easy integration into sustainability and compliance reports.  
+
+---
+
+### **4️⃣ Governance & Controls**  
+Defines new **AI governance KPIs**, such as:  
+- CO₂ per 1M tokens  
+- Tokens per dollar  
+- Model-size justification  
+- Compliance logging & auditing  
+
+➡️ These metrics can be expanded in future versions for enterprise monitoring.  
 
 ---
 
 ## 🧠 Models Compared  
-- `gemma:2b`  
-- `gemma:7b`  
-- `llama3`  
-- `llama3:70b`  
-- `codellama:7b`  
-- `codellama:70b`  
+
+| Model | Type | Parameters |
+|-------|------|-------------|
+| `gemma:2b` | General-purpose | 2B |
+| `gemma:7b` | General-purpose | 7B |
+| `llama3` | Meta LLM | 8B |
+| `llama3:70b` | Meta LLM | 70B |
+| `codellama:7b` | Code-specific | 7B |
+| `codellama:70b` | Code-specific | 70B |  
+
+These represent a range of small-to-large foundation models to simulate how scale affects ROI and sustainability.  
 
 ---
 
 ## 📈 ROI & Sustainability Metrics  
-The dashboard integrates multiple ROI-related metrics such as **tokens per dollar** and **ROI sustainability score**.  
-These provide a simplified view of how efficiently each model performs relative to its **environmental footprint** and **cost**.  
-*(Exact calculation formulas can be adjusted or expanded in future updates.)*  
+
+Our custom **ROI framework** combines both financial and environmental performance:  
+
+\[
+ROI_{score} = f(\text{tokens per dollar}, \text{energy per token}, \text{CO₂ per token})
+\]
+
+This unified metric helps identify models that are not only cost-efficient but also environmentally responsible.  
 
 ---
 
 ## 🧰 Tech Stack  
-- **Python 3.10+**  
-- **Streamlit** – Web framework for interactive dashboards  
-- **Pandas / NumPy** – Data processing and calculations  
-- **Matplotlib / Plotly** – Chart visualizations  
+
+| Category | Tools Used |
+|-----------|-------------|
+| **Language** | Python 3.10+ |
+| **Framework** | Streamlit |
+| **Data Processing** | Pandas, NumPy |
+| **Visualization** | Plotly, Matplotlib |
+| **Design** | KPMG-themed layout, dark-mode dashboard |
 
 ---
 
 ## 🚀 Future Improvements  
-- Refine ROI formula with adjustable weights (productivity, efficiency, sustainability)  
-- Add performance and accuracy metrics for a more holistic comparison  
-- Improve UI with **KPMG-branded color scheme** and design elements  
-- Introduce a scoring system combining cost, performance, and sustainability  
+
+- ✨ Add **real-time data** from Hugging Face API for model emissions and energy data.  
+- 🔧 Allow users to **adjust ROI weightings** (cost vs. energy vs. carbon).  
+- 📊 Integrate **performance and accuracy benchmarks**.  
+- 🌱 Expand dashboard for **model selection recommendations** using optimization algorithms.  
+- 🧾 Link results to **ESG compliance templates** for reporting.  
+
+---
+
+## 👩‍💻 Team  
+
+**Ruth Chane**  
+**Krish Garg**  
+**Michelle Garcia-Zamudio**  
+**Deven Mittal**  
+**Harsharandeep Dhillon**  
+
+---
+
+## 🏢 Acknowledgments  
+Special thanks to **Dr. Uohna**, **KPMG Trusted AI Team**, and **Break Through Tech AI** for their mentorship and guidance throughout this project.  
