@@ -1,0 +1,148 @@
+﻿T'he Anthropic Economic Index
+*  Main uses in AI are found in Software Development & Technical Writing tasks
+* AI use:
+   * Enhancing human capabilities is 57%
+   * Workflow automations are 43%
+   *      * AI use:
+   * Higher in mid to high waged jobs:
+   * Programmers
+   * Data scientists 
+   * Lower for both lowest to highest paid:
+   * Tells us current AI barriers as well as practical barriers to using the tech
+   *   
+
+Harvard Study:
+      * Study:
+      * Harvard, Wharton, MIT researchers tested GPT-4 with 758 BCG consultants
+      * Performance:
+      * AI users completed 12% more tasks        , 25% faster, with 40% higher quality
+      * Skill leveling:
+      * 43% improvements among the lowest performers
+      * Limits:
+      * AI fails on some tasks
+      * Risk of overtrust
+      * Jagged frontier:
+      * Hard to tell which tasks AI handles well
+      * Capability boundary is shifting
+      * Usage Patterns:
+      * Centaur
+      * Switch between AI & human work
+      * Cyborg
+      * Blend AI & human continuously
+      * Risks:
+      * Output homogenization
+      * Ideas higher quality but less diverse
+      * Implication:
+      * Companies might need multiple models or hybrid workflows to preserve innovation
+
+
+Harvard Study:Navigating the Jagged Technological Frontier: Field Experimental Evidence of the Effects of AI on Knowledge Worker Productivity and Quality
+      * Study Setup:
+      * Conducted by Harvard, MIT, Wharton, Warwick, & BCG
+      * Participants:
+      * 758 BCG consultants (7% of the firm)
+      * Design:
+      * Randomized controlled experiment
+      * Groups
+      * No AI, GPT-4 access, GPT-4 + prompt-engineering overview
+      * Tasks:
+      * 18 realistic consulting tasks 
+      * One complex task
+      * Key Findings:
+      * Tasks AI is good at:
+      * +12% task completion
+      * +25% faster on average
+      * +40% higher quality (human grader scores).
+      * Bottom-half performers: +43% boost.
+      * Top-half performers: +17% boost.
+      * Prompt-engineering overview improved outcomes even more.
+      * Tasks AI struggles with:
+      * Accuracy dropped ~19 percentage points for AI users.
+      * Still, recommendation quality scores improved (even when wrong).
+      * AI sped work up (~18–30% faster), but risked confidently incorrect answers.
+      * Patterns of Use
+      * Centaurs
+      * Strategically split tasks between human and AI
+      * Cyborgs
+      * Tightly integrate AI + Human effort at sub-task level
+      * Risks & Tradeoffs
+      * Overtrust
+      * Users sometimes accepted wrong AI outputs uncritically
+      * Homogenization
+      * AI improved quality but reduced diversity of ideas
+      * Training impact
+      * Promt engineering training
+      * More effective use but also more copy paste reliance 
+      * Implications 
+      * AI levels the playing field by raising performance of lower-skilled workers 
+      * Organizations must map tasks to the AI frontier 
+      * Use AI where strong, avoid overtrust elsewhere
+      * Collaboration strategies (centaur and cyborg) matter for performance
+      * Raises policy/ethics concerns
+      * Workforce training
+      * Long-term skill erosion
+      * Diversity of ideas
+
+
+
+
+Data:
+      * LLM-Inference-Energy-Consumption
+      * Provides energy costs & CO2 outputs
+      * Measurements:
+      * Power usage (watts)
+      * Latency
+      * Token throughput when generating text with different LLMs
+      * Conditions covered:
+      * Model type
+      * GPT-2, GPT-Neo, Falcon, LLaMA models
+      * Hardware type:
+      * GPU, TPU, CPU
+      * Batch size
+      * How many requests are processed together
+      * Sequence length:
+      * input/output token lengths
+      * Framework/backend used:
+      * PyTorch, Transformers, vLLM
+      * Metrics Captured:
+      * Energy per token(joules/token)
+      * Important for calculating total cost
+      * Latency (time per token/time per requests)
+      * Throughput (tokens per second)
+      * Total energy consumption for a full run
+      * LIMITATIONS:
+      * Not production scaled
+      * Majority GPU based measurements, cloud deployments will be different
+      * Anthropic Economic Index:
+      * Tracks economic themes, trends, and sentiment from AI + Human Conversations
+      * Designed as an economic signal dataset (captures how people talk about economy)
+      * Data points:
+      * date/time of convo
+      * Topic labels:
+      * Inflation
+      * Jobs
+      * Wages
+      * Productivity
+      * AI
+      * Housing
+      * Sentiment scores (positive, negative, neutral)
+      * Economic confidence indices
+      * Derived from aggregated discussions
+      * Frequency counts of keywords/themes
+      * Granularity
+      * daily/weekly aggregates
+      * Showing how much attention and what tone people assign to different economic factors
+      * Metrics we can pull:
+      * Topic prevalence
+      * % of conversations about inflation, AI, productivity
+      * Sentiment shift
+      * Economic index values
+      * Composite indicators (ex. AI optimism score)
+      * Time series:
+      * Track momentum of discussions across weeks/months
+      * LIMITATIONS:
+      * Sentiment aren’t actual economic outcomes, perception based data
+      * Biased toward online discussion participants (not everyone)
+      * Can be noisy, need to smooth out data
+      * CONCLUSION:
+      * Should be used as another layer of data points to create a multidimensional analysis.

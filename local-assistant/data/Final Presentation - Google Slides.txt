@@ -1,0 +1,121 @@
+Krish Garg
+Harsharandeep Dhillon
+Michelle Garcia-Zamudio
+Deven Mittal
+Ruth Chane
+Quantifying the Carbon, Cost, and ROI Footprint of LLMs
+
+2
+AI’s “Jagged Frontier” of Productivity
++12% more tasks completed
++25% faster execution 
++40% higher quality 
+−19% accuracy outside AI’s capability
+Risks:
+Overtrust in AI 
+homogenization
+long-term skill erosion
+The Problem Landscape
+
+3
+Adoption
+Economic uncertainty shapes adoption ￼
+Volatile ROI expectations →hesitation
+Public sentiment dictates AI adoption
+Anthropic Economic Index → sentiment shifts, optimism cycles
+
+4
+Sustainability
+Sustainability cost often overlooked:
+LLM inference energy consumption → 
+joules/token → kWh → $/CO
+Data Center externalities: 
+carbon emission  
+water consumption
+
+Data Sources
+Harvard/BCG Productivity Study - Measured how AI impacts knowledge worker productivity, showing gains but also risks like overtrust and reduced diversity.
+Anthropic Economic Index - racks real-time economic sentiment (inflation, jobs, AI optimism) from human + AI conversations to signal adoption timing.
+Hugging Face Energy Dataset - Captures the energy use and CO₂ footprint of AI models across hardware and workloads, highlighting sustainability tradeoffs.
+
+6
+Every AI response uses energy, but what really drives that cost?
+We interact with AI every day, but rarely think about the power behind our prompts.
+Could text complexity be the reason? Or something deeper ,the models themselves?
+
+The Big Question
+
+7
+Dataset Overview
+Hugging Face LLM Energy Dataset (78,000 entries) Each entry has:
+ Energy metrics → total & per-token usage
+Model attributes → name, token length, architecture
+Text complexity → word count, diversity, readability
+Timestamps → generation time & duration
+
+8
+Data Preparation
+Removed duplicates and unnamed columns
+Standardized units for consistency across models
+Calculated New Metrics:
+Energy(Wh)
+Cost(USD)
+CO2 emission(grams)
+ROI(tokens per dollar)
+Selected 7 key numerical features for analysis
+
+      
+Standardized units
+Dropped Duplicates  and NAN Entries
+Engineered new metrics
+Selected Key  Features
+
+Correlation Findings
+-Analyzed relationship between text features and energy usage 
+-All correlations were near zero(r<0.1)
+-Indicates text complexity doesn’t drive  energy consumption
+
+10
+PCA Visualization
+Reduces all numerical variables (text, response, and energy metrics)into 2 main components
+
+Clustering by model size
+
+Minimal separation based on text-based features
+
+Suggests that model characteristics drive energy variance 
+
+11
+Modeling: Decision Tree 
+Response length is the most important predictor of energy use.
+
+12
+ROI:Tokens per dollar spent
+
+
+
+13
+
+
+Cost vs CO₂ Emissions
+
+
+
+Summary
+Text complexity and readability have minimal impact on energy use.
+
+Model size and response length are the main energy drivers.
+
+Smaller models(like Gemma-2B)->higher ROI, lower emissions
+
+Larger models(like Llama-70B)->more powerful, less efficient
+
+Next Steps
+Put data insights into a dashboard arrangement
+Add interactive visualizations for model comparisons (ROI, cost, CO₂)
+
+Test dashboard usability and refine based on feedback
+
+
+16
+Thank You

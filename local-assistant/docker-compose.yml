@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  assistant:
+    build: .
+    container_name: kpmg-local-assistant
+    ports:
+      - "8501:8501"
+    depends_on:
+      - llm
+    environment:
+      # Used in chat_app.py to find the model service
+      LLM_API_BASE: "http://llm:11434"
+
+  llm:
+    image: ollama/ollama:latest
+    container_name: kpmg-local-llm
+    ports:
+      - "11434:11434"
+    volumes:
+      # Persist models
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
